@@ -1,0 +1,8 @@
+debug = False
+bookingDays = 10
+hour = '19:15'
+
+
+mail = 'your@mail.com'
+passw = 'yourpass'
+
