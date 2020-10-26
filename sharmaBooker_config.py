@@ -1,8 +1,7 @@
 debug = False
 bookingDays = 10
-hour = '19:15'
+hour = '19:00'
 
 
 mail = 'your@mail.com'
-passw = 'yourpass'
-
+passw = 'yourpassword'

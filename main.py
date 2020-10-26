@@ -161,9 +161,9 @@ def doReservation(dateBooking, hour):
     
     mystr = response.read().decode(response.info().get_param('charset') or 'utf-8')
     
-    text_file = open("C:\\Users\\marcg\\Desktop\\openDevClimb_app\\Output_summit.txt", "w")
-    text_file.write(mystr)
-    text_file.close()
+    # text_file = open("Output_summit.txt", "w")
+    # text_file.write(mystr)
+    # text_file.close()
     
     
     
