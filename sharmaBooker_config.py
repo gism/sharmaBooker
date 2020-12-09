@@ -10,7 +10,7 @@ passw = 'yourpassword'
 # Saturday is 5
 # Sunday is 6
 
-BOOKING_WEEK_DAYS = [1, 3, 4, 6]    # Add/remove ass many days you want to book
+BOOKING_WEEK_DAYS = [1, 3, 4, 6]    # Add/remove as many days you want to book
 BOOKING_DAYS = 10                   # Days ahead to do reservation
 HOUR = '19:00'                      # Target date
 
