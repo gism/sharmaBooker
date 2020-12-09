@@ -22,7 +22,7 @@ urlGetTimePeriod = 'https://sharmaclimbingbarcelona.syltek.com/booking/getTimePe
 
 
 def printD(t):
-    if(debug):
+    if(DEBUG):
         print(t)
 
 def printCurrentReservations():
@@ -220,9 +220,10 @@ printCurrentReservations()
 print("\n:::::::::::::::::::::::::::::::::::::::::::::::::::")
 
 
-for x in range(bookingDays):
+for x in range(BOOKING_DAYS):
   targetDate = datetime.date.today() + datetime.timedelta(days=x)
-  doReservation(targetDate, hour)
+  if targetDate.weekday() in BOOKING_WEEK_DAYS:
+    doReservation(targetDate, HOUR)
 
 print("\n:::::::::::::::::::::::::::::::::::::::::::::::::::")
 printCurrentReservations()
