@@ -25,6 +25,12 @@ def printD(t):
     if(DEBUG):
         print(t)
 
+def save_to_file(what, file_name):
+    if (DEBUG):
+        f = open(file_name, "w")
+        f.write(what)
+        f.close()
+
 def printCurrentReservations():
 
     # Check current reservations:
@@ -32,26 +38,25 @@ def printCurrentReservations():
     response = opener.open(reservationsUrl)
     mystr = response.read().decode(response.info().get_param('charset') or 'utf-8')
     
-    # Uncomment for debuging
-    # text_file = open("check_pre_booking.txt", "w")
-    # text_file.write(mystr)
-    # text_file.close()
+    # save_to_file(mystr, "reservationsUrl.html")
     
-    pastDaysRegEx = re.finditer('<div class=\"dateHeader c-card__day\">[\s\n\r]*([\w,\d\s]+)<\/div>[\s\n\r]*<div class=\"c-card__hour c-card__text\">[\s\n\r]*([\d:]+),[\n\r\w\/\s]+BOOKING (\d+)', mystr, re.MULTILINE)
-    for match in pastDaysRegEx:
-        day_r = match.group(1).strip()
-        hour_r = match.group(2).strip()
-        booking_r = match.group(3).strip()
-        print("past: " + day_r + " at " + hour_r + " Booking ID: " + booking_r)
-    
-    print("")
+    # pastDaysRegEx = re.finditer('<div class=\"dateHeader c-card__day\">[\s\n\r]*([\w,\d\s]+)<\/div>[\s\n\r]*<div class=\"c-card__hour c-card__text\">[\s\n\r]*([\d:]+),[\n\r\w\/\s]+BOOKING (\d+)', mystr, re.MULTILINE)
+    # for match in pastDaysRegEx:
+    #     day_r = match.group(1).strip()
+    #     hour_r = match.group(2).strip()
+    #     booking_r = match.group(3).strip()
+    #     print("Past: " + day_r + " at " + hour_r + " ID: " + booking_r)
+    # print("")
     
     nextDaysRegEx = re.finditer('<div class=\"dateHeader c-card__day fecha\">[\s\n\r]*([\w,\d\s]+)<\/div>[\s\n\r]*<div class=\"c-card__hour c-card__text\">[\s\n\r]*([\d:]+),[\n\r\w\/\s]+RESERVA (\d+)', mystr, re.MULTILINE)
     for match in nextDaysRegEx:
         day_r = match.group(1).strip()
         hour_r = match.group(2).strip()
         booking_r = match.group(3).strip()
-        print("next: " + day_r + " at " + hour_r + " Booking ID: " + booking_r)
+        print("Next: " + day_r + " at " + hour_r + " ID: " + booking_r)
+        
+        if len(list(nextDaysRegEx)) == 0:
+            print("No previous reservations found")
 
 
 def doReservation(dateBooking, hour):
@@ -68,17 +73,21 @@ def doReservation(dateBooking, hour):
     
     
     postGetTimePeriod["_sclDisableCache"] = milsFrom1970
-    # printD("PAYLOAD:")
-    # printD(postGetTimePeriod)
+    printD("PAYLOAD:")
+    printD(postGetTimePeriod)
     
     postData = urllib.parse.urlencode(postGetTimePeriod)
     postData = postData.encode('utf-8')
     
     response = opener.open(urlGetTimePeriod, postData)
-    
     mystr = response.read().decode(response.info().get_param('charset') or 'utf-8')
+    
+    # save_to_file(mystr, "urlGetTimePeriod.html")
+
+    # Look for Json string inside HTML:    
     corr_str = re.sub(r'new\sDate\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)', r'"\1-\2-\3 \4h\5m\6s"', mystr)
     
+    # save_to_file(corr_str, "corr_str.json")
     
     myJson = json.loads(corr_str)
     bookingBlocks = myJson["bookingPeriods"]
@@ -96,9 +105,9 @@ def doReservation(dateBooking, hour):
     days = list(dict.fromkeys(days))
     printD("\nAvailable hours for " + str(dateBooking) + ":")
     for d in days:
-        printD(d)
+        printD(d + " -> " + str(daysCount[d]))
     
-    
+        
     printD("\n:::::::::::::::::::::::::::::::::::::::::::::::::::")
     printD("")
     
@@ -115,27 +124,31 @@ def doReservation(dateBooking, hour):
     response = opener.open(doReservationUrl, postData)
     
     mystr = response.read().decode(response.info().get_param('charset') or 'utf-8')
-    
-    
+    save_to_file(mystr, "doReservationUrl.html")
     
     date_p = re.search('<input type=\"hidden\" name=\"date\" value=\"([\d\s\/:]+)\" \/>', mystr)
     if (not date_p):
-        print("\nERROR: Not posible to book for: " + str(dateBooking) + " at " + hour + "\n")
+        
+        error_message = re.search('<div class=\"c-message-indicator__content\">([\w\W.\d\s\n\r\/:]+?)<', mystr)
+        
+        print("\nERROR: Not posible to book for: " + str(dateBooking) + " at " + hour)
+        print(error_message.group(1).strip())
         return
+    
     date_p = date_p.group(1)
-    # print("DATE: " + date_p)
+    printD("DATE: " + date_p)
     
     idResource = re.search('<input type=\"hidden\" name=\"idResource\" value=\"([\d]+)\" />', mystr)
     idResource = idResource.group(1)
-    # print("idResource: " + idResource)
+    printD("idResource: " + idResource)
     
     idReservation = re.search('<input type=\"hidden\" name=\"idReservation\" value=\"([\d]+)\" />', mystr)
     idReservation = idReservation.group(1)
-    # print("idReservation: " + idReservation)
+    printD("idReservation: " + idReservation)
     
     duration = re.search('<input type=\"hidden\" name=\"duration\" value=\"([\d]+)\" />', mystr)
     duration = duration.group(1)
-    # print("Duration: " + duration)
+    printD("Duration: " + duration)
     
     freeSpots = re.search("Hay ([\d]+) Reservas Escalada disponibles", mystr)
     printD("There are: " + freeSpots.group(1) + " available bookings")
@@ -160,26 +173,21 @@ def doReservation(dateBooking, hour):
     response = opener.open(summitReservationUrl, postData)
     
     mystr = response.read().decode(response.info().get_param('charset') or 'utf-8')
-    
-    # text_file = open("Output_summit.txt", "w")
-    # text_file.write(mystr)
-    # text_file.close()
-    
-    
+    save_to_file(mystr, "summitReservationUrl.html")
     
     sItems = re.search('<input type=\"hidden\" id=\"sItems\" name=\"sItems\" value=\"([\w\d]+)\"\/>', mystr)
     sItems = sItems.group(1)
-    # print("sItems: " + sItems)
+    printD("sItems: " + sItems)
     
     callback = re.search('<input type=\"hidden\" id=\"callback\" name=\"callback\" value=\"([\w\d=\/\?]+)\"\/>', mystr)
     callback = callback.group(1)
-    # print("callback: " + callback)
+    printD("callback: " + callback)
     
     idPaymentMethod = re.search('onclick=\"customerTpv\.pay\(([\d]+), [\w]+\)\">Bono Prepago', mystr)
     idPaymentMethod = idPaymentMethod.group(1)
-    # print("idPaymentMethod: " + idPaymentMethod)
+    printD("idPaymentMethod: " + idPaymentMethod)
     
-    # print("Current URL: " + response.geturl() )
+    printD("Current URL: " + response.geturl() )
     
     postSummitPayment = {'sItems': sItems,
                          'callback': callback,
@@ -190,11 +198,9 @@ def doReservation(dateBooking, hour):
     response = opener.open(response.geturl(), postData)
     
     mystr = response.read().decode(response.info().get_param('charset') or 'utf-8')
+    save_to_file(mystr, "summitResult.html")
     
-    # Uncomment for debugging
-    # text_file = open("Output_summit_payment.txt", "w")
-    # text_file.write(mystr)
-    # text_file.close()
+    sys.exit()
 
 
 cookie_jar = CookieJar()
